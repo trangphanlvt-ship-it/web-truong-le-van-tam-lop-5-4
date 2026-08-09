@@ -65,7 +65,7 @@ export const SUBJECTS_DATA = [
         id: "toan-g1",
         title: "Thám Hiểm Hỗn Số & Phân Số 5/4",
         level: "Lớp 5 - Bài 1",
-        image: "assets/images/subject_learning_art.jpg",
+        image: "/assets/images/subject_learning_art.jpg",
         desc: "Giải bài tập chuyển đổi hỗn số thành phân số và cộng trừ phân số khác mẫu.",
         questions: [
           {
@@ -92,7 +92,7 @@ export const SUBJECTS_DATA = [
         id: "toan-g2",
         title: "Đấu Trí Tỉ Số Phần Trăm & Thể Tích",
         level: "Lớp 5 - Bài 2",
-        image: "assets/images/subject_learning_art.jpg",
+        image: "/assets/images/subject_learning_art.jpg",
         desc: "Chinh phục các bài toán tính tỉ số phần trăm và thể tích hình lập phương, hình hộp chữ nhật.",
         questions: [
           {
@@ -122,7 +122,7 @@ export const SUBJECTS_DATA = [
         id: "tv-g1",
         title: "Hành Trình Chắp Cánh Từ & Cụm Từ",
         level: "Lớp 5 - Việt Nam Quê Hương Tôi",
-        image: "assets/images/school_banner.jpg",
+        image: "/assets/images/school_banner.jpg",
         desc: "Luyện tập xác định đại từ, quan hệ từ và tìm các từ đồng nghĩa, trái nghĩa phong phú.",
         questions: [
           {
@@ -158,7 +158,7 @@ export const SUBJECTS_DATA = [
         id: "kh-g1",
         title: "Nhà Khoa Học Nhí Lớp 5/4",
         level: "Lớp 5 - Năng lượng & Biến đổi",
-        image: "assets/images/subject_learning_art.jpg",
+        image: "/assets/images/subject_learning_art.jpg",
         desc: "Khám phá nguyên lý hoạt động của các nguồn năng lượng sạch và sự biến đổi của chất.",
         questions: [
           {
@@ -188,7 +188,7 @@ export const SUBJECTS_DATA = [
         id: "lsdl-g1",
         title: "Hành Trình Xuyên Việt & TP. Hồ Chí Minh",
         level: "Lớp 5 - Địa lý & Lịch sử",
-        image: "assets/images/school_banner.jpg",
+        image: "/assets/images/school_banner.jpg",
         desc: "Thử thách kiến thức về các danh lam thắng cảnh, các vùng địa lý và truyền thống lịch sử.",
         questions: [
           {
@@ -218,7 +218,7 @@ export const SUBJECTS_DATA = [
         id: "cn-g1",
         title: "Kỹ Sư Công Nghệ 5.0",
         level: "Lớp 5 - Đời sống số",
-        image: "assets/images/subject_learning_art.jpg",
+        image: "/assets/images/subject_learning_art.jpg",
         desc: "Học cách bảo vệ mật khẩu, ứng xử văn minh trên mạng và thiết kế mô hình công nghệ.",
         questions: [
           {
@@ -247,7 +247,7 @@ export const SUBJECTS_DATA = [
         id: "dd-g1",
         title: "Hạt Giống Tâm Hồn Lớp 5/4",
         level: "Lớp 5 - Giá trị sống",
-        image: "assets/images/school_banner.jpg",
+        image: "/assets/images/school_banner.jpg",
         desc: "Xử lý các tình huống đạo đức đời sống, lan tỏa tinh thần sẻ chia và yêu thương.",
         questions: [
           {
@@ -276,7 +276,7 @@ export const SUBJECTS_DATA = [
         id: "hdtn-g1",
         title: "Thử Thách Kỹ Năng Sống 5.0",
         level: "Lớp 5 - Trải nghiệm sáng tạo",
-        image: "assets/images/subject_learning_art.jpg",
+        image: "/assets/images/subject_learning_art.jpg",
         desc: "Thực hành phương pháp quản lý thời gian học tập - giải trí cân bằng và hợp lý.",
         questions: [
           {
@@ -310,12 +310,12 @@ export const HCM_SPACE_DATA = {
     {
       title: "Bác Hồ với thiếu niên, nhi đồng",
       excerpt: "Bác Hồ luôn dành tình cảm thắm thiết, sâu sắc nhất cho các cháu thiếu niên, nhi đồng cả nước...",
-      image: "assets/images/ho_chi_minh_art.jpg"
+      image: "/assets/images/ho_chi_minh_art.jpg"
     },
     {
       title: "Chiếc áo ấm Bác tặng",
       excerpt: "Câu chuyện cảm động về sự quan tâm chu đáo từng nếp ăn, nếp mặc của Bác đối với thiếu nhi...",
-      image: "assets/images/ho_chi_minh_art.jpg"
+      image: "/assets/images/ho_chi_minh_art.jpg"
     }
   ]
 };
@@ -325,21 +325,21 @@ export const CLASS_ACTIVITIES = [
     id: 1,
     title: "Chương trình Trải nghiệm STEM & Robot Lớp 5/4",
     date: "15/10/2025",
-    image: "assets/images/subject_learning_art.jpg",
+    image: "/assets/images/subject_learning_art.jpg",
     desc: "Các bạn học sinh Lớp 5/4 hào hứng lắp ráp và lập trình mô hình xe tự hành thông minh."
   },
   {
     id: 2,
     title: "Sinh hoạt Sao Nhi Đồng & Hành trình Địa chỉ đỏ",
     date: "20/11/2025",
-    image: "assets/images/school_banner.jpg",
+    image: "/assets/images/school_banner.jpg",
     desc: "Lớp 5/4 dâng hoa tại di tích lịch sử và tham quan Không gian Văn hóa Hồ Chí Minh."
   },
   {
     id: 3,
     title: "Hội thao Phù Đổng Trường TH Lê Văn Tám",
     date: "12/12/2025",
-    image: "assets/images/school_banner.jpg",
+    image: "/assets/images/school_banner.jpg",
     desc: "Lớp 5/4 xuất sắc giành giải Nhất môn Kéo co và giải Nhì Bóng đá nam."
   }
 ];
