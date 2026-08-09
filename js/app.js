@@ -12,8 +12,12 @@ let currentQuestionIndex = 0;
 let currentGameScore = 0;
 
 // Initialize on DOM Ready
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   loadLocalStorageData();
+  if (typeof initSupabaseClient === "function") {
+    initSupabaseClient();
+    await loadSupabaseData();
+  }
   initLiveClock();
   renderNavigation();
   renderHomeScreen();
@@ -26,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
   checkLoggedInUser();
 });
 
-/* Local Storage Persistence */
+/* Local Storage & Supabase Persistence */
 function loadLocalStorageData() {
   const savedStudents = localStorage.getItem("levantam_54_students");
   if (savedStudents) {
@@ -43,6 +47,30 @@ function loadLocalStorageData() {
         }
       });
     } catch (e) {}
+  }
+}
+
+async function loadSupabaseData() {
+  if (typeof fetchStudentsFromSupabase === "function") {
+    const sbStudents = await fetchStudentsFromSupabase();
+    if (sbStudents && sbStudents.length > 0) {
+      allStudents = sbStudents;
+    }
+  }
+
+  if (typeof fetchCustomQuestionsFromSupabase === "function") {
+    const sbQuestions = await fetchCustomQuestionsFromSupabase();
+    if (sbQuestions && sbQuestions.length > 0) {
+      sbQuestions.forEach(q => {
+        const subj = subjectsData.find(s => s.id === q.subjectId);
+        if (subj && subj.games.length > 0) {
+          const exists = subj.games[0].questions.some(ex => ex.q === q.q);
+          if (!exists) {
+            subj.games[0].questions.push(q);
+          }
+        }
+      });
+    }
   }
 }
 
@@ -339,6 +367,9 @@ function renderGameCompleteScreen(container) {
     currentStudent.points += currentGameScore;
     currentStudent.stars += starsEarned;
     saveStudentsData();
+    if (typeof updateStudentPointsInSupabase === "function") {
+      updateStudentPointsInSupabase(currentStudent.id, currentStudent.points, currentStudent.stars);
+    }
     updateHeaderUserBadge();
     renderLeaderboard();
     generateAIPersonalizedTask(currentStudent, currentGame.title, currentGameScore, maxScore);
@@ -542,45 +573,162 @@ function filterStudents(groupName, btnEl) {
   }
 }
 
-/* 9. Student Login & Authentication System */
+/* 9. Username & Password Authentication System (Supabase Synchronized) */
 function openLoginModal() {
+  populateStudentDropdownOptions();
+  switchAuthTab('login');
   document.getElementById("login-modal").classList.add("active");
 }
 
 function closeLoginModal() {
   document.getElementById("login-modal").classList.remove("active");
+  const fb = document.getElementById("auth-modal-feedback");
+  if (fb) fb.style.display = "none";
 }
 
-function handleStudentLogin(e) {
-  e.preventDefault();
-  const nameInput = document.getElementById("login-name").value.trim();
-  const dobInput = document.getElementById("login-dob").value.trim();
+function populateStudentDropdownOptions() {
+  const selectEl = document.getElementById("auth-reg-student-id");
+  if (!selectEl) return;
 
-  if (!nameInput || !dobInput) {
-    alert("Vui lòng nhập đầy đủ Họ tên và Ngày sinh!");
+  selectEl.innerHTML = `<option value="">-- Tạo tài khoản học sinh mới --</option>` +
+    allStudents.map(s => `<option value="${s.id}">${s.avatar} ${s.name} (${s.group} - ${s.role})</option>`).join('');
+}
+
+function switchAuthTab(tab) {
+  const loginForm = document.getElementById("form-auth-login");
+  const regForm = document.getElementById("form-auth-register");
+  const loginBtn = document.getElementById("tab-btn-login");
+  const regBtn = document.getElementById("tab-btn-register");
+  const fbBox = document.getElementById("auth-modal-feedback");
+
+  if (fbBox) fbBox.style.display = "none";
+
+  if (tab === 'register') {
+    loginForm.style.display = "none";
+    regForm.style.display = "block";
+    loginBtn.classList.remove("active");
+    regBtn.classList.add("active");
+  } else {
+    loginForm.style.display = "block";
+    regForm.style.display = "none";
+    loginBtn.classList.add("active");
+    regBtn.classList.remove("active");
+  }
+}
+
+function showAuthFeedback(msg, isError = true) {
+  const fbBox = document.getElementById("auth-modal-feedback");
+  if (!fbBox) return;
+  fbBox.className = `auth-feedback-msg ${isError ? 'error' : 'success'}`;
+  fbBox.innerHTML = isError ? `❌ ${msg}` : `🎉 ${msg}`;
+  fbBox.style.display = "block";
+}
+
+async function handleAccountLogin(e) {
+  e.preventDefault();
+  const username = document.getElementById("auth-login-username").value.trim();
+  const password = document.getElementById("auth-login-password").value.trim();
+
+  if (!username || !password) {
+    showAuthFeedback("Vui lòng điền đầy đủ Tên đăng nhập và Mật khẩu!");
     return;
   }
 
-  // Find matching student (case insensitive & dob match)
-  const found = allStudents.find(s => 
-    s.name.toLowerCase() === nameInput.toLowerCase() && 
-    (s.dob === dobInput || s.dob.replaceAll('/', '-') === dobInput.replaceAll('/', '-'))
-  );
+  showAuthFeedback("Đang xác thực thông tin tài khoản với Supabase DB...", false);
 
+  // Attempt login via Supabase
+  if (typeof loginUserWithSupabase === "function") {
+    const res = await loginUserWithSupabase({ username, password });
+    if (res.success) {
+      currentStudent = res.user;
+      localStorage.setItem("levantam_54_active_user", JSON.stringify(currentStudent));
+      updateHeaderUserBadge();
+      renderLeaderboard();
+      generateAIPersonalizedTask(currentStudent, "Ôn tập tổng hợp", 0, 0);
+      closeLoginModal();
+      alert(`🎉 Đăng nhập thành công!\nChào mừng ${currentStudent.name} (${currentStudent.role})!`);
+      return;
+    } else if (!res.offline) {
+      showAuthFeedback(res.error || "Tên đăng nhập hoặc mật khẩu không chính xác!");
+      return;
+    }
+  }
+
+  // Fallback local authentication
+  const found = allStudents.find(s => s.name.toLowerCase() === username.toLowerCase());
   if (found) {
     currentStudent = found;
     localStorage.setItem("levantam_54_active_user", JSON.stringify(found));
     updateHeaderUserBadge();
-    closeLoginModal();
     renderLeaderboard();
-    
-    // Show AI Personal Task Box
-    generateAIPersonalizedTask(currentStudent, "Ôn tập tổng hợp", 0, 0);
-
-    alert(`🎉 Đăng nhập thành công!\nChào mừng em ${currentStudent.name} (${currentStudent.role} - ${currentStudent.group})!`);
+    closeLoginModal();
+    alert(`🎉 Đăng nhập thành công (Offline Mode)!\nChào mừng em ${currentStudent.name}!`);
   } else {
-    alert(`❌ Không tìm thấy thông tin học sinh "${nameInput}" có ngày sinh ${dobInput}.\nVui lòng kiểm tra lại chính xác danh sách Lớp 5/4!`);
+    showAuthFeedback("Không tìm thấy tài khoản! Hãy đăng ký tài khoản mới trên tab [Đăng Ký Tài Khoản].");
   }
+}
+
+async function handleAccountRegister(e) {
+  e.preventDefault();
+  const username = document.getElementById("auth-reg-username").value.trim();
+  const fullName = document.getElementById("auth-reg-fullname").value.trim();
+  const password = document.getElementById("auth-reg-password").value.trim();
+  const confirmPassword = document.getElementById("auth-reg-confirm-password").value.trim();
+  const studentIdVal = document.getElementById("auth-reg-student-id").value;
+
+  if (password !== confirmPassword) {
+    showAuthFeedback("Mật khẩu và Xác nhận mật khẩu không khớp nhau!");
+    return;
+  }
+
+  if (password.length < 6) {
+    showAuthFeedback("Mật khẩu phải có tối thiểu 6 ký tự!");
+    return;
+  }
+
+  showAuthFeedback("Đang khởi tạo và lưu tài khoản vào Supabase DB...", false);
+
+  const studentId = studentIdVal ? parseInt(studentIdVal) : null;
+  const linkedStudent = studentId ? allStudents.find(s => s.id === studentId) : null;
+  const avatar = linkedStudent ? linkedStudent.avatar : "👦";
+
+  if (typeof registerUserInSupabase === "function") {
+    const res = await registerUserInSupabase({ username, password, fullName, studentId, avatar });
+    if (res.success) {
+      currentStudent = res.user;
+      localStorage.setItem("levantam_54_active_user", JSON.stringify(currentStudent));
+      updateHeaderUserBadge();
+      renderLeaderboard();
+      generateAIPersonalizedTask(currentStudent, "Bài học mới", 0, 0);
+      closeLoginModal();
+      alert(`🎉 Đăng ký tài khoản thành công!\nTài khoản "${username}" đã được lưu trực tiếp vào cơ sở dữ liệu Supabase.`);
+      return;
+    } else if (!res.offline) {
+      showAuthFeedback(res.error || "Đăng ký thất bại, vui lòng kiểm tra lại!");
+      return;
+    }
+  }
+
+  // Fallback register
+  const newAccount = {
+    id: Date.now(),
+    name: fullName,
+    username: username,
+    role: "Học sinh",
+    avatar: avatar,
+    points: 0,
+    stars: 0,
+    badge: "Học sinh Mới",
+    group: "Lớp 5/4"
+  };
+  allStudents.push(newAccount);
+  saveStudentsData();
+  currentStudent = newAccount;
+  localStorage.setItem("levantam_54_active_user", JSON.stringify(newAccount));
+  updateHeaderUserBadge();
+  renderLeaderboard();
+  closeLoginModal();
+  alert(`🎉 Đăng ký thành công tài khoản mới: ${fullName}!`);
 }
 
 function checkLoggedInUser() {
@@ -691,13 +839,17 @@ function handleAddQuestion(e) {
     subj.games[0].questions.push(newQ);
   }
 
-  // Save to LocalStorage
+  // Save to LocalStorage & Supabase
   let customQs = [];
   try {
     customQs = JSON.parse(localStorage.getItem("levantam_54_custom_q")) || [];
   } catch(e) {}
   customQs.push(newQ);
   localStorage.setItem("levantam_54_custom_q", JSON.stringify(customQs));
+
+  if (typeof insertQuestionToSupabase === "function") {
+    insertQuestionToSupabase(newQ);
+  }
 
   alert(`✅ Đã thêm câu hỏi mới thành công vào môn ${subj.name}!`);
   document.getElementById("add-question-form").reset();
