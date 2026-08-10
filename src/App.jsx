@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import HeroBanner from './components/HeroBanner';
 import SubjectLearning from './components/SubjectLearning';
+import ClassActivities from './components/ClassActivities';
+import Announcements from './components/Announcements';
 import QuizModal from './components/QuizModal';
 import HCMCulturalSpace from './components/HCMCulturalSpace';
 import HonorBoard from './components/HonorBoard';
@@ -27,7 +29,7 @@ export default function App() {
   const [subjects, setSubjects] = useState(SUBJECTS_DATA);
   const [activeGame, setActiveGame] = useState(null);
 
-  // Load Saved Supabase DB Data for interactive elements
+  // Synchronize student leaderboard and custom questions from DB
   useEffect(() => {
     async function loadData() {
       const sbStudents = await fetchStudentsFromSupabase();
@@ -86,12 +88,14 @@ export default function App() {
       <main className="app-main-layout">
         {activeSection === 'home' && <HeroBanner activeUser={profile} />}
         {activeSection === 'subjects' && <SubjectLearning subjects={subjects} onLaunchGame={game => setActiveGame(game)} />}
+        {activeSection === 'activities' && <ClassActivities />}
+        {activeSection === 'announcements' && <Announcements />}
         {activeSection === 'hcm-space' && <HCMCulturalSpace />}
         {activeSection === 'leaderboard' && <HonorBoard students={students} activeUser={profile} />}
         {activeSection === 'class-list' && <ClassRoster students={students} />}
         {activeSection === 'teacher-builder' && <QuestionBuilder subjects={subjects} onAddQuestion={handleAddQuestion} />}
-        
-        {/* Auth & Dashboards */}
+
+        {/* Auth & Role Dashboards */}
         {activeSection === 'auth' && <AuthPage />}
         {activeSection === 'admin-dashboard' && <AdminDashboard />}
         {activeSection === 'teacher-dashboard' && <TeacherDashboard />}

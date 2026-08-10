@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogIn, LogOut, Shield, School, GraduationCap, User } from 'lucide-react';
+import { LogIn, LogOut, Shield, School, GraduationCap, User, Megaphone, Trophy, Sparkles } from 'lucide-react';
 
 export default function Header({ activeSection, setActiveSection }) {
   const { user, profile, role, isAdmin, isTeacher, isStudent, logout } = useAuth();
@@ -29,8 +29,10 @@ export default function Header({ activeSection, setActiveSection }) {
   const navItems = [
     { id: 'home', label: '🏠 Trang Chủ' },
     { id: 'subjects', label: '📚 7 Môn SGK Lớp 5' },
+    { id: 'activities', label: '🎨 Hoạt Động Lớp' },
     { id: 'hcm-space', label: '🇻🇳 VH Hồ Chí Minh' },
-    { id: 'leaderboard', label: '🏆 Bảng Vinh Danh' },
+    { id: 'leaderboard', label: '🏆 Vinh Danh' },
+    { id: 'announcements', label: '📢 Dặn Dò Cô Trang' },
     { id: 'class-list', label: '👥 Sơ Đồ Lớp 5/4' }
   ];
 
@@ -40,39 +42,45 @@ export default function Header({ activeSection, setActiveSection }) {
   if (isTeacher) {
     navItems.push({ id: 'teacher-dashboard', label: '👩‍🏫 QL Lớp & Học Liệu' });
   }
-  if (user) {
-    navItems.push({ id: 'student-dashboard', label: '🎓 Bài Học Học Sinh' });
+  if (user || profile) {
+    navItems.push({ id: 'student-dashboard', label: '🎓 Góc Học Sinh' });
   }
 
   return (
     <header className="main-header">
-      <div className="header-top-bar" style={{ padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      {/* Top Banner Bar */}
+      <div className="header-top-bar" style={{ padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div className="school-brand" style={{ cursor: 'pointer' }} onClick={() => setActiveSection('home')}>
           <div className="school-logo-emblem">🇻🇳</div>
           <div>
             <div className="school-title">TRƯỜNG TIỂU HỌC LÊ VĂN TÁM</div>
-            <div className="school-subtitle">HỆ THỐNG QUẢN LÝ & HỌC TẬP TƯƠNG TÁC LỚP 5/4</div>
+            <div className="school-subtitle">
+              LỚP 5/4 • NĂM HỌC 2025-2026 • GVCN: PHAN THỊ DIỄM TRANG
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.85)', marginTop: '2px' }}>
+              📍 S15 đường Tân Phú, phường Tân Mỹ, Thành phố Hồ Chí Minh
+            </div>
           </div>
         </div>
 
-        {user ? (
+        {profile ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '8px',
+              gap: '10px',
               background: 'rgba(255,255,255,0.95)',
-              padding: '6px 14px',
+              padding: '6px 16px',
               borderRadius: '20px',
               boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
             }}>
-              <span style={{ fontSize: '1.1rem' }}>{profile?.avatar_url || '👤'}</span>
+              <span style={{ fontSize: '1.2rem' }}>{profile?.avatar_url || '👦'}</span>
               <div style={{ textAlign: 'left', lineHeight: '1.2' }}>
                 <div style={{ fontWeight: '700', fontSize: '0.85rem', color: '#0f172a' }}>
-                  {profile?.full_name || user.email}
+                  {profile?.full_name}
                 </div>
                 <div style={{ fontSize: '0.72rem', color: '#d97706', fontWeight: '800', textTransform: 'uppercase' }}>
-                  {role === 'admin' ? '🛡️ Admin' : role === 'teacher' ? '👩‍🏫 Giáo Viên' : '🎓 Học Sinh'}
+                  {role === 'admin' ? '🛡️ Admin' : role === 'teacher' ? '👩‍🏫 Giáo Viên' : `🎓 Học Sinh ⭐ ${profile.stars || 0}`}
                 </div>
               </div>
             </div>
@@ -104,7 +112,7 @@ export default function Header({ activeSection, setActiveSection }) {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '8px 16px',
+              padding: '8px 18px',
               background: 'linear-gradient(135deg, #d97706, #b45309)',
               color: 'white',
               borderRadius: '20px',
@@ -119,12 +127,14 @@ export default function Header({ activeSection, setActiveSection }) {
         )}
       </div>
 
+      {/* Live Date-Time Bar under Banner */}
       <div className="live-clock-banner">
         <div className="clock-scroll-text">
-          <strong>{timeStr}</strong> | Website Lớp 5/4 Trường TH Lê Văn Tám - GVCN: Cô PHAN THỊ DIỄM TRANG | Kết nối Supabase Realtime DB & RLS Security Active!
+          🕒 <strong>{timeStr}</strong> | 🏫 Trường TH Lê Văn Tám - Lớp 5/4 (2025-2026) | GVCN: Cô PHAN THỊ DIỄM TRANG | Địa chỉ: S15 đường Tân Phú, P. Tân Mỹ, TP.HCM | Supabase PostgreSQL DB & RLS Active!
         </div>
       </div>
 
+      {/* Main Navigation Bar */}
       <nav className="main-nav">
         <div className="nav-container">
           <ul className="nav-links-list">

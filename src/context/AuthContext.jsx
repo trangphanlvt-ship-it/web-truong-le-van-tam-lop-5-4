@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase, getProfile, signInUser, signUpUser, signOutUser } from '../lib/supabase';
+import { supabase, getProfile, signInUser, signUpUser, signOutUser, signInStudentByNameAndDob } from '../lib/supabase';
 
 const AuthContext = createContext(null);
 
@@ -19,9 +19,20 @@ export function AuthProvider({ children }) {
           if (isMounted) setUser(session.user);
           await loadProfile(session.user.id);
         } else {
-          if (isMounted) {
-            setUser(null);
-            setProfile(null);
+          // Check local stored student session
+          const savedStudentStr = localStorage.getItem('lvt54_student_profile');
+          if (savedStudentStr) {
+            try {
+              const savedProf = JSON.parse(savedStudentStr);
+              if (isMounted) setProfile(savedProf);
+            } catch (e) {
+              console.warn(e);
+            }
+          } else {
+            if (isMounted) {
+              setUser(null);
+              setProfile(null);
+            }
           }
         }
       } catch (err) {
@@ -38,8 +49,11 @@ export function AuthProvider({ children }) {
         setUser(session.user);
         await loadProfile(session.user.id);
       } else {
-        setUser(null);
-        setProfile(null);
+        const savedStudentStr = localStorage.getItem('lvt54_student_profile');
+        if (!savedStudentStr) {
+          setUser(null);
+          setProfile(null);
+        }
       }
       setLoading(false);
     });
@@ -57,13 +71,14 @@ export function AuthProvider({ children }) {
       return p;
     } catch (err) {
       console.warn('Profile fetch note:', err.message);
-      // Fallback profile if record is still being created by trigger
       const fallback = {
         id: userId,
         email: user?.email || '',
         full_name: user?.user_metadata?.full_name || 'Người dùng',
         role: user?.user_metadata?.role || 'student',
-        avatar_url: ''
+        avatar_url: '',
+        points: 0,
+        stars: 0
       };
       setProfile(fallback);
       return fallback;
@@ -73,6 +88,7 @@ export function AuthProvider({ children }) {
   async function login(email, password) {
     setLoading(true);
     try {
+      localStorage.removeItem('lvt54_student_profile');
       const data = await signInUser({ email, password });
       if (data.user) {
         setUser(data.user);
@@ -84,10 +100,24 @@ export function AuthProvider({ children }) {
     }
   }
 
-  async function register(email, password, fullName, role = 'student', avatarUrl = '') {
+  async function loginStudentByNameAndDob(fullName, dob) {
     setLoading(true);
     try {
-      const data = await signUpUser({ email, password, fullName, role, avatarUrl });
+      const studentProf = await signInStudentByNameAndDob(fullName, dob);
+      if (studentProf) {
+        setProfile(studentProf);
+        localStorage.setItem('lvt54_student_profile', JSON.stringify(studentProf));
+        return studentProf;
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function register(email, password, fullName, role = 'student', avatarUrl = '', dob = '') {
+    setLoading(true);
+    try {
+      const data = await signUpUser({ email, password, fullName, role, avatarUrl, dob });
       return data;
     } finally {
       setLoading(false);
@@ -97,7 +127,10 @@ export function AuthProvider({ children }) {
   async function logout() {
     setLoading(true);
     try {
-      await signOutUser();
+      localStorage.removeItem('lvt54_student_profile');
+      if (user) {
+        await signOutUser();
+      }
       setUser(null);
       setProfile(null);
     } finally {
@@ -119,6 +152,7 @@ export function AuthProvider({ children }) {
     isStudent,
     loading,
     login,
+    loginStudentByNameAndDob,
     register,
     logout,
     refreshProfile: () => user && loadProfile(user.id)

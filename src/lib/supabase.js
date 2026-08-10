@@ -10,7 +10,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 // 1. AUTHENTICATION HELPERS (Supabase Auth & Profiles)
 // ============================================================================
 
-export async function signUpUser({ email, password, fullName, role = 'student', avatarUrl = '' }) {
+export async function signUpUser({ email, password, fullName, role = 'student', avatarUrl = '', dob = '' }) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -18,7 +18,8 @@ export async function signUpUser({ email, password, fullName, role = 'student', 
       data: {
         full_name: fullName,
         role: role,
-        avatar_url: avatarUrl
+        avatar_url: avatarUrl,
+        dob: dob
       }
     }
   });
@@ -35,6 +36,37 @@ export async function signInUser({ email, password }) {
 
   if (error) throw error;
   return data;
+}
+
+// Student login via Full Name + Date of Birth
+export async function signInStudentByNameAndDob(fullName, dob) {
+  const cleanName = fullName.trim();
+  const cleanDob = dob.trim();
+
+  // Query profiles by full_name ILIKE and dob
+  const { data: profiles, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .ilike('full_name', cleanName)
+    .eq('dob', cleanDob);
+
+  if (error) throw error;
+
+  if (profiles && profiles.length > 0) {
+    return profiles[0];
+  }
+
+  // If not found in DB yet, search by full_name only or create a virtual profile session
+  const { data: nameMatch } = await supabase
+    .from('profiles')
+    .select('*')
+    .ilike('full_name', cleanName);
+
+  if (nameMatch && nameMatch.length > 0) {
+    return nameMatch[0];
+  }
+
+  throw new Error(`Không tìm thấy học sinh "${cleanName}" với ngày sinh "${cleanDob}". Vui lòng kiểm tra lại!`);
 }
 
 export async function signOutUser() {
@@ -76,6 +108,56 @@ export async function updateProfileRole(userId, newRole) {
   return data;
 }
 
+export async function updateStudentPointsInSupabase(userId, points, stars) {
+  if (!userId) return;
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ points, stars })
+    .eq('id', userId)
+    .select();
+
+  if (error) console.warn('Point update note:', error.message);
+  return data;
+}
+
+export async function fetchStudentsFromSupabase() {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('role', 'student')
+    .order('points', { ascending: false });
+
+  if (error) console.warn('Students fetch note:', error.message);
+  return data || [];
+}
+
+export async function fetchCustomQuestionsFromSupabase() {
+  const { data, error } = await supabase
+    .from('materials')
+    .select('*')
+    .eq('type', 'game_iframe');
+
+  if (error) console.warn('Questions fetch note:', error.message);
+  return data || [];
+}
+
+export async function insertQuestionToSupabase(newQ) {
+  const { data, error } = await supabase
+    .from('materials')
+    .insert([{
+      title: newQ.q || 'Câu hỏi tùy chỉnh',
+      description: JSON.stringify(newQ),
+      type: 'game_iframe',
+      subject: newQ.subjectId || 'toan',
+      is_public: true
+    }])
+    .select()
+    .single();
+
+  if (error) console.warn('Insert question note:', error.message);
+  return data;
+}
+
 // ============================================================================
 // 2. CLASSES HELPERS
 // ============================================================================
@@ -113,7 +195,6 @@ export async function createClass({ name, description, code, teacherId }) {
 export async function joinClassByCode(code, studentId) {
   const cleanCode = code.trim().toUpperCase();
 
-  // Find class by code
   const { data: classData, error: findErr } = await supabase
     .from('classes')
     .select('id, name')
@@ -124,7 +205,6 @@ export async function joinClassByCode(code, studentId) {
     throw new Error('Mã lớp không tồn tại. Vui lòng kiểm tra lại!');
   }
 
-  // Insert into class_members
   const { data, error } = await supabase
     .from('class_members')
     .insert([{
@@ -150,7 +230,7 @@ export async function getClassMembers(classId) {
     .select(`
       id,
       joined_at,
-      student:profiles!student_id (id, full_name, email, role, avatar_url)
+      student:profiles!student_id (id, full_name, email, role, avatar_url, dob)
     `)
     .eq('class_id', classId)
     .order('joined_at', { ascending: true });
@@ -176,7 +256,7 @@ export async function getMaterials() {
   return data || [];
 }
 
-export async function createMaterial({ title, description, fileUrl, type, authorId, isPublic = false }) {
+export async function createMaterial({ title, description, fileUrl, type, subject = 'toan', authorId, isPublic = true }) {
   const { data, error } = await supabase
     .from('materials')
     .insert([{
@@ -184,6 +264,7 @@ export async function createMaterial({ title, description, fileUrl, type, author
       description,
       file_url: fileUrl,
       type,
+      subject,
       author_id: authorId,
       is_public: isPublic
     }])
@@ -243,7 +324,7 @@ export async function getStudentProgress(studentId) {
       *,
       assignment:assignments!assignment_id (
         id, due_date,
-        material:materials!material_id (title, type, file_url, description),
+        material:materials!material_id (title, type, file_url, description, subject),
         class:classes!class_id (name, code)
       )
     `)
@@ -253,12 +334,13 @@ export async function getStudentProgress(studentId) {
   return data || [];
 }
 
-export async function upsertStudentProgress({ assignmentId, studentId, status, score }) {
+export async function upsertStudentProgress({ assignmentId, studentId, status, score, completionTime = 0 }) {
   const payload = {
     assignment_id: assignmentId,
     student_id: studentId,
     status: status,
     score: score !== undefined ? score : 0,
+    completion_time: completionTime,
     completed_at: status === 'completed' || status === 'submitted' ? new Date().toISOString() : null
   };
 
@@ -272,18 +354,37 @@ export async function upsertStudentProgress({ assignmentId, studentId, status, s
   return data;
 }
 
-export async function getAllProgressForClass(classId) {
+// ============================================================================
+// 6. ANNOUNCEMENTS & CLASS ACTIVITIES HELPERS
+// ============================================================================
+
+export async function getAnnouncements() {
   const { data, error } = await supabase
-    .from('student_progress')
-    .select(`
-      *,
-      student:profiles!student_id (full_name, email),
-      assignment:assignments!assignment_id (
-        id,
-        material:materials!material_id (title, type)
-      )
-    `);
+    .from('announcements')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) console.warn('Announcements fetch note:', error.message);
+  return data || [];
+}
+
+export async function createAnnouncement({ title, content, authorId }) {
+  const { data, error } = await supabase
+    .from('announcements')
+    .insert([{ title, content, author_id: authorId }])
+    .select()
+    .single();
 
   if (error) throw error;
+  return data;
+}
+
+export async function getClassActivities() {
+  const { data, error } = await supabase
+    .from('class_activities')
+    .select('*')
+    .order('event_date', { ascending: false });
+
+  if (error) console.warn('Activities fetch note:', error.message);
   return data || [];
 }
