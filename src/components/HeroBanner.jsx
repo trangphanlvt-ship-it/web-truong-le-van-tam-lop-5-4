@@ -2,6 +2,8 @@ import React from 'react';
 import { CLASS_INFO, CLASS_ACTIVITIES } from '../data/classData';
 
 export default function HeroBanner({ activeUser }) {
+  const displayName = activeUser?.full_name || activeUser?.name || 'Học sinh';
+
   return (
     <div>
       <div className="hero-welcome-card">
@@ -62,6 +64,7 @@ export default function HeroBanner({ activeUser }) {
               boxShadow: 'var(--shadow-md)',
               border: '2px solid var(--primary-green-light)'
             }}
+            onError={(e) => { e.target.src = '/assets/images/subject_learning_art.jpg'; }}
           />
         </div>
       </div>
@@ -98,10 +101,10 @@ export default function HeroBanner({ activeUser }) {
             <div style={{ fontSize: '2.5rem' }}>🤖</div>
             <div style={{ flexGrow: 1 }}>
               <h4 style={{ fontFamily: 'var(--font-heading)', color: 'var(--primary-green-dark)', fontSize: '1.2rem' }}>
-                QUY TRÌNH HỌC TẬP CÁ NHÂN HÓA AI - HỌC SINH: {activeUser.name.toUpperCase()}
+                QUY TRÌNH HỌC TẬP CÁ NHÂN HÓA AI - HỌC SINH: {displayName.toUpperCase()}
               </h4>
               <div style={{ marginTop: '6px', fontSize: '0.95rem', color: 'var(--ink-dark)' }}>
-                🤖 <strong>Trợ lý AI Lê Văn Tám đồng hành:</strong> Chào em {activeUser.name}! AI đã chuẩn bị các nhiệm vụ rèn luyện thích hợp nhất cho em hôm nay.
+                🤖 <strong>Trợ lý AI Lê Văn Tám đồng hành:</strong> Chào em {displayName}! AI đã chuẩn bị các nhiệm vụ rèn luyện thích hợp nhất cho em hôm nay.
               </div>
               <div style={{
                 marginTop: '14px',
@@ -132,12 +135,17 @@ export default function HeroBanner({ activeUser }) {
         {CLASS_ACTIVITIES.map(act => (
           <div key={act.id} className="game-card">
             <div className="game-thumb-box">
-              <img src={act.image} alt={act.title} className="game-thumb-img" />
-              <span className="game-tag">{act.date}</span>
+              <img
+                src={act.image_url || act.image || '/assets/images/school_banner.jpg'}
+                alt={act.title}
+                className="game-thumb-img"
+                onError={(e) => { e.target.src = '/assets/images/subject_learning_art.jpg'; }}
+              />
+              <span className="game-tag">{act.date || '2025-2026'}</span>
             </div>
             <div className="game-info">
               <h4 className="game-title">{act.title}</h4>
-              <p style={{ fontSize: '0.88rem', color: 'var(--ink-soft)' }}>{act.desc}</p>
+              <p style={{ fontSize: '0.88rem', color: 'var(--ink-soft)' }}>{act.description || act.desc}</p>
             </div>
           </div>
         ))}

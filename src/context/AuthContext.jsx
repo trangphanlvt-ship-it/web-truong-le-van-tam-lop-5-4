@@ -8,7 +8,6 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Synchronize state with Supabase Auth Session
   useEffect(() => {
     let isMounted = true;
 
@@ -24,6 +23,10 @@ export function AuthProvider({ children }) {
           if (savedStudentStr) {
             try {
               const savedProf = JSON.parse(savedStudentStr);
+              if (savedProf) {
+                savedProf.name = savedProf.full_name || savedProf.name || 'Học sinh';
+                savedProf.full_name = savedProf.full_name || savedProf.name || 'Học sinh';
+              }
               if (isMounted) setProfile(savedProf);
             } catch (e) {
               console.warn(e);
@@ -67,6 +70,10 @@ export function AuthProvider({ children }) {
   async function loadProfile(userId) {
     try {
       const p = await getProfile(userId);
+      if (p) {
+        p.name = p.full_name || p.name || 'Người dùng';
+        p.full_name = p.full_name || p.name || 'Người dùng';
+      }
       setProfile(p);
       return p;
     } catch (err) {
@@ -75,6 +82,7 @@ export function AuthProvider({ children }) {
         id: userId,
         email: user?.email || '',
         full_name: user?.user_metadata?.full_name || 'Người dùng',
+        name: user?.user_metadata?.full_name || 'Người dùng',
         role: user?.user_metadata?.role || 'student',
         avatar_url: '',
         points: 0,
@@ -105,6 +113,8 @@ export function AuthProvider({ children }) {
     try {
       const studentProf = await signInStudentByNameAndDob(fullName, dob);
       if (studentProf) {
+        studentProf.name = studentProf.full_name || studentProf.name || fullName;
+        studentProf.full_name = studentProf.full_name || studentProf.name || fullName;
         setProfile(studentProf);
         localStorage.setItem('lvt54_student_profile', JSON.stringify(studentProf));
         return studentProf;

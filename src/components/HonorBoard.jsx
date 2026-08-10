@@ -1,7 +1,7 @@
 import React from 'react';
 
 export default function HonorBoard({ students, activeUser }) {
-  const sorted = [...students].sort((a, b) => b.points - a.points);
+  const sorted = [...students].sort((a, b) => (b.points || 0) - (a.points || 0));
   const top1 = sorted[0];
   const top2 = sorted[1];
   const top3 = sorted[2];
@@ -28,9 +28,9 @@ export default function HonorBoard({ students, activeUser }) {
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: '20px', minHeight: '220px' }}>
           {top2 && (
             <div style={{ textAlign: 'center', width: '110px' }}>
-              <div style={{ fontSize: '2rem' }}>{top2.avatar}</div>
-              <div style={{ fontWeight: '800', fontSize: '0.9rem' }}>{top2.name}</div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--ink-soft)' }}>{top2.points} pts</div>
+              <div style={{ fontSize: '2rem' }}>{top2.avatar_url || top2.avatar || '👧'}</div>
+              <div style={{ fontWeight: '800', fontSize: '0.9rem' }}>{top2.full_name || top2.name}</div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--ink-soft)' }}>{top2.points || 0} pts</div>
               <div style={{
                 height: '90px', background: '#cbd5e1', borderRadius: '12px 12px 0 0',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.5rem', color: '#475569', marginTop: '10px'
@@ -43,9 +43,9 @@ export default function HonorBoard({ students, activeUser }) {
           {top1 && (
             <div style={{ textAlign: 'center', width: '120px' }}>
               <div style={{ color: '#eab308', fontSize: '1.5rem' }}>👑</div>
-              <div style={{ fontSize: '2.5rem' }}>{top1.avatar}</div>
-              <div style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--primary-green-dark)' }}>{top1.name}</div>
-              <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--accent-gold)' }}>{top1.points} pts</div>
+              <div style={{ fontSize: '2.5rem' }}>{top1.avatar_url || top1.avatar || '👦'}</div>
+              <div style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--primary-green-dark)' }}>{top1.full_name || top1.name}</div>
+              <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--accent-gold)' }}>{top1.points || 0} pts</div>
               <div style={{
                 height: '120px', background: 'linear-gradient(180deg, #fef08a 0%, #eab308 100%)', borderRadius: '12px 12px 0 0',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '2rem', color: '#854d0e', marginTop: '10px'
@@ -57,9 +57,9 @@ export default function HonorBoard({ students, activeUser }) {
 
           {top3 && (
             <div style={{ textAlign: 'center', width: '110px' }}>
-              <div style={{ fontSize: '2rem' }}>{top3.avatar}</div>
-              <div style={{ fontWeight: '800', fontSize: '0.9rem' }}>{top3.name}</div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--ink-soft)' }}>{top3.points} pts</div>
+              <div style={{ fontSize: '2rem' }}>{top3.avatar_url || top3.avatar || '👧'}</div>
+              <div style={{ fontWeight: '800', fontSize: '0.9rem' }}>{top3.full_name || top3.name}</div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--ink-soft)' }}>{top3.points || 0} pts</div>
               <div style={{
                 height: '70px', background: '#fed7aa', borderRadius: '12px 12px 0 0',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.5rem', color: '#9a3412', marginTop: '10px'
@@ -95,15 +95,15 @@ export default function HonorBoard({ students, activeUser }) {
               style={activeUser && activeUser.id === st.id ? { background: '#f0fdf4', fontWeight: 'bold' } : {}}
             >
               <td><strong>#{idx + 1}</strong></td>
-              <td>{st.avatar} {st.name}</td>
-              <td>{st.group}</td>
+              <td>{st.avatar_url || st.avatar || '👦'} {st.full_name || st.name}</td>
+              <td>{st.group || 'Lớp 5/4'}</td>
               <td>
                 <span style={{ background: '#f1f5f9', padding: '2px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: '700' }}>
-                  {st.badge}
+                  {st.badge || 'Học sinh Chăm ngoan'}
                 </span>
               </td>
-              <td>⭐ {st.stars}</td>
-              <td style={{ color: 'var(--primary-green-dark)', fontWeight: '800' }}>{st.points} pts</td>
+              <td>⭐ {st.stars || 0}</td>
+              <td style={{ color: 'var(--primary-green-dark)', fontWeight: '800' }}>{st.points || 0} pts</td>
             </tr>
           ))}
         </tbody>

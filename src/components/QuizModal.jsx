@@ -138,7 +138,7 @@ export default function QuizModal({ game, onClose, activeUser, onCompleteGame })
 
             {activeUser ? (
               <div style={{ background: '#f0fdf4', border: '1px solid var(--primary-green-light)', padding: '14px', borderRadius: '12px', color: 'var(--primary-green-dark)', margin: '20px 0', fontWeight: '600' }}>
-                ✨ Đã tự động đồng bộ thành tích vào tài khoản <strong>{activeUser.name}</strong> trên Supabase DB!
+                ✨ Đã tự động đồng bộ thành tích vào tài khoản <strong>{activeUser.full_name || activeUser.name}</strong> trên Supabase DB!
               </div>
             ) : (
               <div style={{ background: '#fefce8', border: '1px solid var(--accent-gold)', padding: '14px', borderRadius: '12px', color: '#854d0e', margin: '20px 0', fontSize: '0.9rem' }}>

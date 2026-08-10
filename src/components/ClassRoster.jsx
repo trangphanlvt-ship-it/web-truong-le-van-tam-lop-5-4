@@ -27,11 +27,11 @@ export default function ClassRoster({ students }) {
       <div className="students-grid">
         {filteredStudents.map(s => (
           <div key={s.id} className="student-card">
-            <div className="student-avatar">{s.avatar}</div>
+            <div className="student-avatar">{s.avatar_url || s.avatar || '👦'}</div>
             <div style={{ flexGrow: 1 }}>
-              <div style={{ fontWeight: '800', color: 'var(--ink-dark)', fontSize: '1.05rem' }}>{s.name}</div>
-              <div style={{ fontSize: '0.82rem', color: 'var(--ink-soft)' }}>📅 Ngày sinh: {s.dob}</div>
-              <div style={{ fontSize: '0.82rem', color: 'var(--ink-soft)' }}>🏷️ {s.group} - {s.role}</div>
+              <div style={{ fontWeight: '800', color: 'var(--ink-dark)', fontSize: '1.05rem' }}>{s.full_name || s.name}</div>
+              <div style={{ fontSize: '0.82rem', color: 'var(--ink-soft)' }}>📅 Ngày sinh: {s.dob || '2015'}</div>
+              <div style={{ fontSize: '0.82rem', color: 'var(--ink-soft)' }}>🏷️ {s.group || 'Lớp 5/4'} - {s.role || 'Thành viên'}</div>
               <span style={{
                 display: 'inline-block',
                 marginTop: '6px',
@@ -42,7 +42,7 @@ export default function ClassRoster({ students }) {
                 fontSize: '0.78rem',
                 fontWeight: '700'
               }}>
-                {s.badge}
+                {s.badge || 'Học sinh Lớp 5/4'}
               </span>
             </div>
           </div>

@@ -30,38 +30,58 @@ export default function AuthPage() {
     setErrorMessage('');
     setSuccessMessage('');
 
-    if (!studentName.trim() || !studentDob.trim()) {
+    const cleanName = studentName.trim();
+    const cleanDob = studentDob.trim();
+
+    if (!cleanName || !cleanDob) {
       setErrorMessage('Vui lòng điền đầy đủ Họ Tên và Ngày tháng năm sinh.');
       return;
     }
 
     try {
-      // Try DB lookup via Supabase
-      const prof = await loginStudentByNameAndDob(studentName, studentDob);
+      // 1. Try DB lookup via Supabase
+      const prof = await loginStudentByNameAndDob(cleanName, cleanDob);
       if (prof) {
-        setSuccessMessage(`Xin chào học sinh ${prof.full_name}! Đăng nhập thành công.`);
+        const fullProf = {
+          ...prof,
+          name: prof.full_name || prof.name || cleanName,
+          full_name: prof.full_name || prof.name || cleanName
+        };
+        localStorage.setItem('lvt54_student_profile', JSON.stringify(fullProf));
+        setSuccessMessage(`Xin chào học sinh ${fullProf.full_name}! Đang chuyển đến không gian học tập...`);
+        setTimeout(() => {
+          window.location.reload();
+        }, 300);
         return;
       }
     } catch (err) {
-      // Fallback matching against demo class list 5/4
+      // 2. Fallback matching against demo class list 5/4
       const match = INITIAL_STUDENTS.find(s =>
-        s.name.toLowerCase().trim() === studentName.toLowerCase().trim() &&
-        (s.dob === studentDob.trim() || s.dob.replace(/\//g, '-') === studentDob.trim() || studentDob.includes('2015'))
+        s.name.toLowerCase().trim() === cleanName.toLowerCase() ||
+        s.name.toLowerCase().includes(cleanName.toLowerCase()) ||
+        cleanName.toLowerCase().includes(s.name.toLowerCase())
       );
 
       if (match) {
         const demoProf = {
           id: `demo-student-${match.id}`,
           full_name: match.name,
+          name: match.name,
           email: `${match.id}@levantam.edu.vn`,
           role: 'student',
           dob: match.dob,
           avatar_url: match.avatar,
+          avatar: match.avatar,
           points: match.points,
-          stars: match.stars
+          stars: match.stars,
+          badge: match.badge,
+          group: match.group
         };
         localStorage.setItem('lvt54_student_profile', JSON.stringify(demoProf));
-        window.location.reload();
+        setSuccessMessage(`Xin chào học sinh ${demoProf.full_name}! Đang chuyển đến trang học tập...`);
+        setTimeout(() => {
+          window.location.reload();
+        }, 300);
         return;
       }
 
@@ -77,6 +97,9 @@ export default function AuthPage() {
     try {
       await login(email, password);
       setSuccessMessage('Đăng nhập Supabase thành công!');
+      setTimeout(() => {
+        window.location.reload();
+      }, 300);
     } catch (err) {
       setErrorMessage(err.message || 'Email hoặc mật khẩu không chính xác.');
     }
